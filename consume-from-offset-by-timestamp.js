@@ -6,6 +6,7 @@ var TopicPartition = require('node-rdkafka/lib/topic-partition')
 const kafkaBrokers = 'localhost:9092'
 const KAFKA_TOPIC = 'test-getoffset'
 const REQUESTED_TIMESTAMP = (new Date().getTime()) - (24 * 3600000) // 24h ago
+const REQUEST_OFFSET_TIMEOUT = 30000; // ms
 
 
 var consumer = new Kafka.KafkaConsumer({
@@ -33,19 +34,19 @@ consumer
       console.error(`Required topic ${KAFKA_TOPIC} not found!`)
       return
     }
+    console.log("Topic Metadata:\n", topicMetadata)
 
-    console.log('Topic partitions:', topicMetadata.partitions.length)
+    console.log('Topic partitions:', topicMetadata.partitions.length, "\n", topicMetadata.partitions)
 
     const topPars = topicMetadata.partitions.map(t => {
       return new TopicPartition(KAFKA_TOPIC, t.id, REQUESTED_TIMESTAMP)
     })
-    console.log('Requesting TopicPartitions...')
-    consumer.offsetsForTimes(topPars, 30000, (err, tp) => {
+    console.log((new Date()), 'Requesting TopicPartitions...')
+    consumer.offsetsForTimes(topPars, REQUEST_OFFSET_TIMEOUT, (err, tp) => {
       if (err) {
-        console.error('offsetForTimes error: ', err)
+        console.error((new Date()), 'offsetForTimes error: ', err)
         return
       }
-    
       console.log('offsetForTimes: toppars:', tp)
 
       consumer.assign(tp)
